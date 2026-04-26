@@ -29,7 +29,7 @@ A cloud-based e-commerce platform that empowers local businesses to create and m
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/YOURUSERNAME/LocalBizVault.git
+git clone https://github.com/GouriNB-111/LocalBizVault.git
 cd LocalBizVault
 
 # 2. Create virtual environment
@@ -61,20 +61,36 @@ It uses:
 - Auto-runs `flask db upgrade` on every deploy
 
 ## 📁 Project Structure
+
+```
 LocalBizVault/
 ├── app/
-│   ├── init.py       # App factory
-│   ├── models.py         # Database models
-│   ├── routes.py         # All routes
-│   ├── forms.py          # WTForms
-│   └── templates/        # Jinja2 HTML templates
-│       ├── admin/        # Shopkeeper views
-│       └── storefront/   # Customer views
-├── migrations/           # Flask-Migrate files
-├── config.py             # App configuration
-├── requirements.txt      # Dependencies
-├── render.yaml           # Render deployment config
-└── run.py                # App entry point
+│   ├── __init__.py         # App factory
+│   ├── models.py           # Database models
+│   ├── routes.py           # All routes
+│   ├── forms.py            # WTForms
+│   ├── utils.py            # Helper functions
+│   └── templates/
+│       ├── base.html
+│       ├── index.html
+│       ├── admin/          # Shopkeeper views
+│       │   ├── dashboard.html
+│       │   ├── orders.html
+│       │   ├── add_product.html
+│       │   ├── store_status.html
+│       │   ├── login.html
+│       │   └── register.html
+│       └── storefront/     # Customer views
+│           ├── storefront.html
+│           ├── cart.html
+│           └── checkout.html
+├── migrations/             # Flask-Migrate files
+├── config.py               # App configuration
+├── requirements.txt        # Python dependencies
+├── render.yaml             # Render deployment config
+├── Procfile                # Process file for deployment
+└── run.py                  # App entry point
+```
 
 ## 👤 User Roles
 
