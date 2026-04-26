@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Store Status - {{ shop.shop_name }}{% endblock %}
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+    :root {
+        --brand: #4f46e5; --brand-deep: #3730a3;
+        --accent: #10b981; --accent-dark: #059669;
+        --ink: #0f0f1a; --ink-soft: #4b5563;
+        --surface: #ffffff; --surface-2: #f8f7ff; --border: #e5e3fc;
+    }
+    body { font-family: 'DM Sans', sans-serif; }
+
+    .status-wrapper { padding: 2.5rem 0 4rem; }
+
+    .page-heading { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem; color: var(--ink); letter-spacing: -0.03em; margin-bottom: 0.2rem; }
+    .page-sub { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 2rem; }
+
+    .status-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(79,70,229,0.07); }
+    .status-card-header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 1.4rem 1.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    .status-card-header-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em; display: flex; align-items: center; gap: 0.5rem; }
+    .status-card-body { padding: 1.8rem; }
+
+    .live-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #ecfdf5; color: #065f46; border: 1.5px solid #6ee7b7; border-radius: 50px; font-size: 0.82rem; font-weight: 700; padding: 0.35rem 0.9rem; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+
+    .draft-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #fffbeb; color: #92400e; border: 1.5px solid #fde68a; border-radius: 50px; font-size: 0.82rem; font-weight: 700; padding: 0.35rem 0.9rem; }
+
+    .status-alert { border-radius: 14px; padding: 1.2rem 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 1rem; }
+    .status-alert.live { background: #ecfdf5; border: 1.5px solid #6ee7b7; }
+    .status-alert.draft { background: #fffbeb; border: 1.5px solid #fde68a; }
+    .status-alert-icon { font-size: 1.8rem; }
+    .status-alert-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: var(--ink); margin-bottom: 0.2rem; }
+    .status-alert-text { font-size: 0.85rem; color: var(--ink-soft); }
+    .status-alert-text a { color: var(--brand); font-weight: 600; word-break: break-all; }
+
+    .section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem; }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.8rem; }
+    @media(max-width:600px){ .detail-grid { grid-template-columns: 1fr; } }
+    .detail-item { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; }
+    .detail-item .d-label { font-size: 0.72rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.2rem; }
+    .detail-item .d-value { font-size: 0.92rem; font-weight: 600; color: var(--ink); word-break: break-all; }
+
+    .btn-back { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--surface-2); border: 1.5px solid var(--border); color: var(--ink); border-radius: 10px; padding: 0.6rem 1.2rem; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.88rem; text-decoration: none; transition: background 0.2s, border-color 0.2s; }
+    .btn-back:hover { background: var(--border); border-color: var(--brand); color: var(--brand); }
+
+    .fade-up { opacity:0; transform:translateY(16px); animation:fadeUp 0.4s ease forwards; }
+    .fade-up:nth-child(1){animation-delay:0.05s} .fade-up:nth-child(2){animation-delay:0.15s}
+    @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+</style>
+
+<div class="status-wrapper">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 col-xl-7">
+
+            <div class="fade-up">
+                <p class="page-heading">Store Status</p>
+                <p class="page-sub">Live deployment info for your shop.</p>
+            </div>
+
+            <div class="status-card fade-up">
+                <div class="status-card-header">
+                    <div class="status-card-header-title">
+                        <i class="fas fa-store"></i> {{ shop.shop_name }}
+                    </div>
+                    {% if shop.status == 'Deployed' %}
+                        <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+                    {% else %}
+                        <div class="draft-badge"><i class="fas fa-pencil-alt" style="font-size:0.7rem"></i> DRAFT</div>
+                    {% endif %}
+                </div>
+
+                <div class="status-card-body">
+
+                    {% if shop.status == 'Deployed' %}
+                    <div class="status-alert live">
+                        <div class="status-alert-icon">🚀</div>
+                        <div>
+                            <div class="status-alert-title">Your store is LIVE on the platform!</div>
+                            <div class="status-alert-text">
+                                Customers can visit you at:
+                                <a href="/{{ shop.slug }}" target="_blank">https://localbizvault.live/{{ shop.slug }}</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="status-alert draft">
+                        <div class="status-alert-icon">📝</div>
+                        <div>
+                            <div class="status-alert-title">Store is in Draft Mode</div>
+                            <div class="status-alert-text">Deploy your store from the dashboard to make it visible to customers.</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="section-title"><i class="fas fa-info-circle"></i> Store Details</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="d-label">Shop Name</div>
+                            <div class="d-value">{{ shop.shop_name }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="d-label">URL Slug</div>
+                            <div class="d-value">/{{ shop.slug }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="d-label">Phone</div>
+                            <div class="d-value">{{ shop.phone or '—' }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="d-label">Address</div>
+                            <div class="d-value">{{ shop.address or '—' }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="d-label">Theme</div>
+                            <div class="d-value">{{ shop.theme|title if shop.theme else '—' }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="d-label">Deployed On</div>
+                            <div class="d-value">
+                                {% if shop.deployed_at %}
+                                    {{ shop.deployed_at.strftime('%d %b %Y, %I:%M %p') }}
+                                {% else %}
+                                    Not Deployed
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{{ url_for('main.dashboard') }}" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

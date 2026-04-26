@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Your Cart — LocalBizVault{% endblock %}
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+    :root {
+        --brand: #4f46e5; --accent: #10b981; --accent-dark: #059669;
+        --ink: #0f0f1a; --ink-soft: #4b5563;
+        --surface: #ffffff; --surface-2: #f8f7ff; --border: #e5e3fc;
+    }
+    body { font-family: 'DM Sans', sans-serif; }
+
+    .cart-wrapper { padding: 2.5rem 0 4rem; }
+    .page-heading { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem; color: var(--ink); letter-spacing: -0.03em; margin-bottom: 0.2rem; }
+    .page-sub { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 2rem; }
+
+    .cart-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(79,70,229,0.07); margin-bottom: 1.5rem; }
+    .cart-card-header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 1rem 1.5rem; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; }
+
+    .cart-item { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item:hover { background: var(--surface-2); }
+
+    .item-name { font-weight: 600; font-size: 0.95rem; color: var(--ink); }
+    .item-price { font-size: 0.85rem; color: var(--ink-soft); margin-top: 0.1rem; }
+
+    .qty-control { display: flex; align-items: center; gap: 0.5rem; }
+    .qty-btn { width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface-2); color: var(--ink); font-size: 0.9rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, background 0.2s; }
+    .qty-btn:hover { border-color: var(--brand); background: #ede9fe33; color: var(--brand); }
+    .qty-num { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--ink); min-width: 24px; text-align: center; }
+
+    .item-subtotal { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--ink); }
+
+    .btn-remove { background: none; border: 1.5px solid #fecaca; border-radius: 8px; color: #ef4444; font-size: 0.8rem; font-weight: 600; padding: 0.3rem 0.7rem; cursor: pointer; transition: background 0.2s, color 0.2s; display: flex; align-items: center; gap: 0.3rem; }
+    .btn-remove:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+    .cart-footer { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 1.2rem 1.5rem; box-shadow: 0 4px 24px rgba(79,70,229,0.07); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .total-label { font-size: 0.85rem; color: var(--ink-soft); font-weight: 500; margin-bottom: 0.1rem; }
+    .total-amount { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; color: var(--brand); letter-spacing: -0.02em; }
+
+    .btn-checkout { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 12px; padding: 0.85rem 1.8rem; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 4px 16px rgba(16,185,129,0.35); }
+    .btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(16,185,129,0.45); color: white; }
+
+    .empty-state { text-align: center; padding: 4rem 2rem; }
+    .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.3; }
+    .empty-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; color: var(--ink); margin-bottom: 0.5rem; }
+    .empty-sub { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 1.5rem; }
+    .btn-browse { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--brand); color: white; border-radius: 10px; padding: 0.65rem 1.4rem; font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: opacity 0.2s; }
+    .btn-browse:hover { opacity: 0.88; color: white; }
+
+    .fade-up { opacity:0; transform:translateY(16px); animation:fadeUp 0.4s ease forwards; }
+    .fade-up:nth-child(1){animation-delay:0.05s} .fade-up:nth-child(2){animation-delay:0.15s} .fade-up:nth-child(3){animation-delay:0.22s}
+    @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+    @media(max-width:576px){
+        .cart-item { flex-direction: column; align-items: flex-start; }
+        .cart-footer { flex-direction: column; align-items: stretch; text-align: center; }
+        .btn-checkout { justify-content: center; }
+    }
+</style>
+
+<div class="cart-wrapper">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+
+            <div class="fade-up">
+                <p class="page-heading">Your Cart 🛒</p>
+                <p class="page-sub">Review your items before placing the order.</p>
+            </div>
+
+            {% if cart_items %}
+
+            <div class="cart-card fade-up">
+                <div class="cart-card-header">
+                    <i class="fas fa-shopping-basket"></i>
+                    {{ cart_items|length }} item{% if cart_items|length != 1 %}s{% endif %} in your cart
+                </div>
+
+                {% for item in cart_items %}
+                <div class="cart-item">
+
+                    <!-- Name + price -->
+                    <div style="flex:1; min-width:140px;">
+                        <div class="item-name">{{ item.product.name }}</div>
+                        <div class="item-price">&#8377;{{ item.product.price }} each</div>
+                    </div>
+
+                    <!-- Qty controls -->
+                    <div class="qty-control">
+                        <form method="POST" action="{{ url_for('main.update_cart', product_id=item.product.id) }}">
+                            <button type="submit" name="action" value="decrease" class="qty-btn">−</button>
+                        </form>
+                        <span class="qty-num">{{ item.quantity }}</span>
+                        <form method="POST" action="{{ url_for('main.update_cart', product_id=item.product.id) }}">
+                            <button type="submit" name="action" value="increase" class="qty-btn">+</button>
+                        </form>
+                    </div>
+
+                    <!-- Subtotal -->
+                    <div class="item-subtotal">&#8377;{{ item.subtotal }}</div>
+
+                    <!-- Remove -->
+                    <form method="POST" action="{{ url_for('main.remove_from_cart', product_id=item.product.id) }}">
+                        <button type="submit" class="btn-remove">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                    </form>
+
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Footer -->
+            <div class="cart-footer fade-up">
+                <div>
+                    <div class="total-label">Total Payable</div>
+                    <div class="total-amount">&#8377;{{ total }}</div>
+                </div>
+                <a href="{{ url_for('main.checkout') }}" class="btn-checkout">
+                    Proceed to Checkout <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            {% else %}
+
+            <div class="cart-card fade-up">
+                <div class="empty-state">
+                    <div class="empty-icon">🛒</div>
+                    <div class="empty-title">Your cart is empty</div>
+                    <div class="empty-sub">Browse local shops and add something you love.</div>
+                    <a href="{{ url_for('main.home') }}" class="btn-browse">
+                        <i class="fas fa-store"></i> Browse Shops
+                    </a>
+                </div>
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

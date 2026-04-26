@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}{{ shop.shop_name }} — LocalBizVault{% endblock %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
+:root{
+    --brand:#4f46e5; --brand-light:#eef2ff;
+    --accent:#10b981; --accent-light:#ecfdf5;
+    --ink:#0d0d1a; --ink-soft:#6b7280;
+    --surface:#fff; --surface-2:#f9fafb; --border:#e5e7eb;
+}
+.sf-page{font-family:'DM Sans',sans-serif; padding-bottom:4rem;}
+.shop-hero{
+    background:linear-gradient(135deg,#0d0d1a 0%,#1e1b4b 100%);
+    border-radius:20px; padding:2.5rem 2rem; margin-bottom:2.5rem;
+    position:relative; overflow:hidden;
+}
+.shop-hero::before{
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 70% 60% at 30% 50%,rgba(79,70,229,0.35) 0%,transparent 65%),
+               radial-gradient(ellipse 40% 50% at 80% 20%,rgba(124,58,237,0.2) 0%,transparent 60%);
+}
+.shop-hero-inner{position:relative;z-index:1;display:flex;align-items:center;gap:1.8rem;flex-wrap:wrap;}
+.shop-avatar{
+    width:72px;height:72px;border-radius:18px;flex-shrink:0;
+    background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Syne',sans-serif;font-weight:900;font-size:1.6rem;color:#fff;overflow:hidden;
+}
+.shop-avatar img{width:100%;height:100%;object-fit:cover;}
+.shop-name-hero{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.4rem,3.5vw,2rem);color:#fff;letter-spacing:-0.02em;margin-bottom:0.4rem;}
+.shop-meta{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:0.8rem;}
+.shop-meta-item{display:flex;align-items:center;gap:0.4rem;color:rgba(255,255,255,0.65);font-size:0.83rem;}
+.shop-meta-item i{color:rgba(255,255,255,0.35);font-size:0.78rem;}
+.live-pill{
+    display:inline-flex;align-items:center;gap:0.4rem;
+    background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4);
+    color:#6ee7b7;border-radius:20px;padding:0.25rem 0.8rem;
+    font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
+}
+.live-pill .dot{width:6px;height:6px;border-radius:50%;background:#10b981;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.products-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;}
+.products-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:var(--ink);margin:0;}
+.product-count{background:var(--brand-light);color:var(--brand);border-radius:20px;padding:0.2rem 0.7rem;font-size:0.78rem;font-weight:700;}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1.3rem;}
+.product-card{
+    background:var(--surface);border:1.5px solid var(--border);
+    border-radius:18px;overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,0.04);
+    transition:box-shadow 0.25s,transform 0.25s,border-color 0.25s;
+    display:flex;flex-direction:column;
+}
+.product-card:hover{box-shadow:0 12px 40px rgba(79,70,229,0.12);transform:translateY(-4px);border-color:#c7d2fe;}
+.product-img-wrap{
+    height:210px;background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;border-bottom:1px solid var(--border);
+}
+.product-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform 0.35s;}
+.product-card:hover .product-img-wrap img{transform:scale(1.04);}
+.product-no-img{display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
+.product-body{padding:1.1rem;display:flex;flex-direction:column;flex:1;}
+.product-category{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--brand);background:var(--brand-light);border-radius:4px;padding:0.15rem 0.5rem;display:inline-block;margin-bottom:0.5rem;}
+.product-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:0.3rem;line-height:1.3;}
+.product-desc{font-size:0.8rem;color:var(--ink-soft);line-height:1.55;margin-bottom:0.8rem;flex:1;}
+.product-footer{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem;}
+.product-price{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:var(--accent);}
+.stock-badge{font-size:0.72rem;font-weight:600;padding:0.2rem 0.55rem;border-radius:6px;}
+.in-stock{background:var(--accent-light);color:#065f46;}
+.low-stock{background:#fffbeb;color:#92400e;}
+.out-stock{background:#fef2f2;color:#991b1b;}
+.btn-add-cart{
+    width:100%;background:linear-gradient(135deg,#4f46e5,#7c3aed);
+    color:#fff;border:none;border-radius:10px;
+    padding:0.6rem 1rem;font-weight:700;font-size:0.88rem;
+    display:flex;align-items:center;justify-content:center;gap:0.45rem;
+    text-decoration:none;transition:transform 0.15s,box-shadow 0.15s;
+    box-shadow:0 4px 14px rgba(79,70,229,0.3);
+}
+.btn-add-cart:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,0.45);color:#fff;}
+.btn-add-cart:active{transform:translateY(0);}
+.empty-products{
+    grid-column:1/-1;text-align:center;padding:4rem 2rem;
+    background:var(--surface-2);border:1.5px dashed var(--border);border-radius:16px;
+}
+.fade-up{opacity:0;transform:translateY(14px);animation:fadeUp 0.4s ease forwards;}
+.fade-up:nth-child(1){animation-delay:0.04s} .fade-up:nth-child(2){animation-delay:0.09s}
+.fade-up:nth-child(3){animation-delay:0.14s} .fade-up:nth-child(4){animation-delay:0.19s}
+.fade-up:nth-child(5){animation-delay:0.24s} .fade-up:nth-child(6){animation-delay:0.29s}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+</style>
+
+<div class="sf-page">
+
+    <div class="shop-hero">
+        <div class="shop-hero-inner">
+            <div class="shop-avatar">
+                {% if shop.logo %}
+                <img src="/uploads/{{ shop.logo }}" alt="{{ shop.shop_name }}">
+                {% else %}
+                {{ shop.shop_name[:2].upper() }}
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="shop-name-hero">{{ shop.shop_name }}</h1>
+                <div class="shop-meta">
+                    {% if shop.address %}
+                    <div class="shop-meta-item"><i class="fas fa-map-marker-alt"></i>{{ shop.address }}</div>
+                    {% endif %}
+                    {% if shop.phone %}
+                    <div class="shop-meta-item"><i class="fas fa-phone"></i>{{ shop.phone }}</div>
+                    {% endif %}
+                </div>
+                <span class="live-pill"><span class="dot"></span> Live on LocalBizVault</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="products-header">
+        <h2 class="products-title">Products <span class="product-count">{{ products|length }}</span></h2>
+        <a href="{{ url_for('main.cart') }}" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:600;color:var(--brand);">
+            <i class="fas fa-shopping-cart"></i> View Cart
+            {% if session.get('cart') and session['cart']|length > 0 %}
+            <span style="background:var(--brand);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;">{{ session['cart']|length }}</span>
+            {% endif %}
+        </a>
+    </div>
+
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card fade-up">
+            <div class="product-img-wrap">
+                {% if product.image %}
+                <img src="{{ url_for('main.uploaded_file', filename=product.image) }}"
+                     alt="{{ product.name }}"
+                     onerror="this.parentElement.innerHTML='<div class=\'product-no-img\'><i class=\'fas fa-image fa-3x\' style=\'color:#d1d5db\'></i></div>'">
+                {% else %}
+                <div class="product-no-img"><i class="fas fa-image fa-3x" style="color:#d1d5db"></i></div>
+                {% endif %}
+            </div>
+            <div class="product-body">
+                {% if product.category %}
+                <span class="product-category">{{ product.category }}</span>
+                {% endif %}
+                <div class="product-name">{{ product.name }}</div>
+                {% if product.description %}
+                <div class="product-desc">{{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}</div>
+                {% endif %}
+                <div class="product-footer">
+                    <div class="product-price">&#8377;{{ product.price }}</div>
+                    {% if product.stock > 10 %}
+                    <span class="stock-badge in-stock">In Stock</span>
+                    {% elif product.stock > 0 %}
+                    <span class="stock-badge low-stock">Only {{ product.stock }} left</span>
+                    {% else %}
+                    <span class="stock-badge out-stock">Out of Stock</span>
+                    {% endif %}
+                </div>
+                {% if product.stock > 0 %}
+                <a href="{{ url_for('main.add_to_cart', product_id=product.id, slug=shop.slug) }}" class="btn-add-cart">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                </a>
+                {% else %}
+                <button disabled style="width:100%;background:#f3f4f6;color:#9ca3af;border:none;border-radius:10px;padding:0.6rem;font-weight:600;font-size:0.88rem;cursor:not-allowed;">
+                    Out of Stock
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-products">
+            <div style="font-size:2.5rem;margin-bottom:1rem;opacity:0.3">&#128230;</div>
+            <h5 style="font-family:'Syne',sans-serif;color:#374151;">No products yet</h5>
+            <p style="color:#6b7280;font-size:0.85rem;">This shop hasn't added any products yet. Check back soon!</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

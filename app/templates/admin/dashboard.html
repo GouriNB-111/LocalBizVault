@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ current_user.shop_name or current_user.name }}{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+        --brand:        #4f46e5;
+        --brand-light:  #eef2ff;
+        --accent:       #10b981;
+        --accent-light: #ecfdf5;
+        --warn:         #f59e0b;
+        --warn-light:   #fffbeb;
+        --ink:          #0f0f1a;
+        --ink-soft:     #6b7280;
+        --surface:      #ffffff;
+        --surface-2:    #f9fafb;
+        --border:       #e5e7eb;
+    }
+
+    .dash-page { font-family: 'DM Sans', sans-serif; padding: 2rem 0 4rem; }
+
+    /* Welcome bar */
+    .welcome-bar {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 16px; padding: 1.6rem 2rem;
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 1rem; margin-bottom: 1.8rem;
+        box-shadow: 0 8px 32px rgba(79,70,229,0.25);
+    }
+    .welcome-text h2 {
+        font-family: 'Syne', sans-serif; font-weight: 800;
+        font-size: 1.6rem; color: white; margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .welcome-text p { color: rgba(255,255,255,0.75); margin: 0.2rem 0 0; font-size: 0.88rem; }
+    .welcome-actions { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+    .btn-wh {
+        background: rgba(255,255,255,0.15); color: white;
+        border: 1.5px solid rgba(255,255,255,0.3);
+        border-radius: 10px; padding: 0.5rem 1.1rem;
+        font-size: 0.85rem; font-weight: 600;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;
+        transition: background 0.2s, border-color 0.2s;
+        font-family: 'DM Sans', sans-serif;
+        cursor: pointer;
+    }
+    .btn-wh:hover { background: rgba(255,255,255,0.28); color: white; border-color: rgba(255,255,255,0.6); }
+    .btn-wh.solid { background: white; color: var(--brand); border-color: white; }
+    .btn-wh.solid:hover { background: #f0f0ff; color: var(--brand); }
+
+    /* Deploy banner */
+    .deploy-banner {
+        border-radius: 14px; padding: 1.2rem 1.5rem;
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;
+        border: 1.5px solid;
+    }
+    .deploy-banner.draft {
+        background: var(--warn-light); border-color: #fcd34d;
+    }
+    .deploy-banner.live {
+        background: var(--accent-light); border-color: #6ee7b7;
+    }
+    .banner-text strong {
+        font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+    }
+    .banner-text p { font-size: 0.83rem; color: var(--ink-soft); margin: 0.15rem 0 0; }
+    .btn-deploy {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white; border: none; border-radius: 10px;
+        padding: 0.55rem 1.3rem; font-family: 'Syne', sans-serif;
+        font-weight: 700; font-size: 0.88rem; cursor: pointer;
+        box-shadow: 0 4px 12px rgba(245,158,11,0.35);
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-deploy:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,158,11,0.45); }
+    .btn-live-visit {
+        background: var(--accent); color: white;
+        border: none; border-radius: 10px;
+        padding: 0.5rem 1.2rem; font-weight: 600; font-size: 0.85rem;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;
+        transition: background 0.2s;
+    }
+    .btn-live-visit:hover { background: #059669; color: white; }
+
+    /* Stat cards */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: 14px; padding: 1.1rem 1.2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .stat-card:hover { box-shadow: 0 4px 20px rgba(79,70,229,0.1); transform: translateY(-2px); }
+    .stat-card .sc-icon {
+        width: 40px; height: 40px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; margin-bottom: 0.7rem;
+    }
+    .sc-icon.products { background: var(--brand-light); color: var(--brand); }
+    .sc-icon.orders   { background: var(--warn-light);  color: var(--warn); }
+    .sc-icon.revenue  { background: var(--accent-light); color: var(--accent); }
+    .sc-icon.pending  { background: #fdf2f8; color: #db2777; }
+    .stat-card .sc-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; color: var(--ink); line-height: 1; }
+    .stat-card .sc-lbl { font-size: 0.78rem; color: var(--ink-soft); font-weight: 500; margin-top: 0.2rem; }
+
+    /* Section header */
+    .section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .section-title {
+        font-family: 'Syne', sans-serif; font-weight: 700;
+        font-size: 1.15rem; color: var(--ink); margin: 0;
+    }
+    .section-count {
+        background: var(--brand-light); color: var(--brand);
+        border-radius: 20px; padding: 0.15rem 0.65rem;
+        font-size: 0.78rem; font-weight: 700;
+    }
+
+    /* Product grid */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.2rem; }
+    .product-card {
+        background: var(--surface); border: 1.5px solid var(--border);
+        border-radius: 14px; overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .product-card:hover { box-shadow: 0 6px 24px rgba(79,70,229,0.12); transform: translateY(-3px); }
+    .product-img {
+        height: 180px; background: var(--surface-2);
+        display: flex; align-items: center; justify-content: center;
+        border-bottom: 1px solid var(--border); overflow: hidden;
+    }
+    .product-img img { max-height: 100%; max-width: 100%; object-fit: contain; }
+    .product-body { padding: 1rem; }
+    .product-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--ink); margin-bottom: 0.3rem; }
+    .product-price { font-size: 1.15rem; font-weight: 700; color: var(--accent); margin-bottom: 0.2rem; }
+    .product-meta { font-size: 0.76rem; color: var(--ink-soft); margin-bottom: 0.7rem; }
+    .product-meta span + span::before { content: ' · '; }
+    .btn-delete {
+        width: 100%; background: var(--surface); color: var(--danger: #ef4444);
+        border: 1.5px solid #fecaca; border-radius: 8px;
+        padding: 0.4rem; font-size: 0.8rem; font-weight: 600;
+        cursor: pointer; transition: background 0.15s, border-color 0.15s;
+        font-family: 'DM Sans', sans-serif; color: #dc2626;
+    }
+    .btn-delete:hover { background: #fef2f2; border-color: #fca5a5; }
+
+    /* Empty products */
+    .empty-products {
+        grid-column: 1/-1; text-align: center;
+        padding: 3rem 2rem; background: var(--surface-2);
+        border: 1.5px dashed var(--border); border-radius: 14px;
+        color: var(--ink-soft);
+    }
+
+    /* Fade animation */
+    .fade-up { opacity:0; transform:translateY(14px); animation: fadeUp 0.4s ease forwards; }
+    .fade-up:nth-child(1){animation-delay:0.05s} .fade-up:nth-child(2){animation-delay:0.1s}
+    .fade-up:nth-child(3){animation-delay:0.15s} .fade-up:nth-child(4){animation-delay:0.2s}
+    @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+</style>
+
+<div class="dash-page">
+
+    <!-- Welcome bar -->
+    <div class="welcome-bar fade-up">
+        <div class="welcome-text">
+            <h2>Welcome back, {{ current_user.shop_name or current_user.name }}!</h2>
+            <p>Here's what's happening with your store today.</p>
+        </div>
+        <div class="welcome-actions">
+            <a href="{{ url_for('main.add_product') }}" class="btn-wh solid">
+                <i class="fas fa-plus"></i> Add Product
+            </a>
+            <a href="{{ url_for('main.orders') }}" class="btn-wh">
+                <i class="fas fa-receipt"></i> View Orders
+            </a>
+        </div>
+    </div>
+
+    <!-- Deploy / Live banner -->
+    {% if current_user.role == 'shopkeeper' %}
+    <div class="fade-up">
+        {% if current_user.status == 'Draft' %}
+        <div class="deploy-banner draft">
+            <div class="banner-text">
+                <strong>&#128640; Your store is in Draft Mode</strong>
+                <p>Deploy it now to make it visible to customers on the platform.</p>
+            </div>
+            <form method="POST" action="{{ url_for('main.deploy_store') }}" style="margin:0">
+                <button type="submit" class="btn-deploy">
+                    <i class="fas fa-rocket"></i> Deploy Store Now
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="deploy-banner live">
+            <div class="banner-text">
+                <strong>&#9989; Your store is LIVE on the platform!</strong>
+                <p>Customers can discover and shop from your store right now.</p>
+            </div>
+            <a href="/{{ current_user.slug }}" target="_blank" class="btn-live-visit">
+                <i class="fas fa-external-link-alt"></i> Visit Live Store
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Stat cards -->
+    <div class="stats-row fade-up">
+        <div class="stat-card">
+            <div class="sc-icon products"><i class="fas fa-box"></i></div>
+            <div class="sc-val">{{ products|length }}</div>
+            <div class="sc-lbl">Products</div>
+        </div>
+        <div class="stat-card">
+            <div class="sc-icon orders"><i class="fas fa-shopping-bag"></i></div>
+            <div class="sc-val">{{ orders|length }}</div>
+            <div class="sc-lbl">Total Orders</div>
+        </div>
+        <div class="stat-card">
+            <div class="sc-icon revenue"><i class="fas fa-rupee-sign"></i></div>
+            <div class="sc-val">&#8377;{{ orders|sum(attribute='total_amount')|int }}</div>
+            <div class="sc-lbl">Revenue</div>
+        </div>
+        <div class="stat-card">
+            <div class="sc-icon pending"><i class="fas fa-clock"></i></div>
+            <div class="sc-val">{{ orders|selectattr('status','equalto','Pending')|list|length }}</div>
+            <div class="sc-lbl">Pending</div>
+        </div>
+    </div>
+
+    <!-- Products section -->
+    <div class="fade-up">
+        <div class="section-header">
+            <h3 class="section-title">Your Products <span class="section-count">{{ products|length }}</span></h3>
+            <a href="{{ url_for('main.add_product') }}" class="btn btn-sm btn-primary px-3" style="border-radius:8px; font-weight:600;">
+                <i class="fas fa-plus me-1"></i> Add New
+            </a>
+        </div>
+
+        <div class="product-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div class="product-img">
+                    {% if product.image %}
+                    <img src="{{ url_for('main.uploaded_file', filename=product.image) }}"
+                         onerror="this.src='https://via.placeholder.com/300x200?text=No+Image';">
+                    {% else %}
+                    <i class="fas fa-image fa-3x" style="color:#d1d5db"></i>
+                    {% endif %}
+                </div>
+                <div class="product-body">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">&#8377;{{ product.price }}</div>
+                    <div class="product-meta">
+                        <span>Stock: {{ product.stock }}</span>
+                        <span>{{ product.category or 'Uncategorized' }}</span>
+                    </div>
+                    <form method="POST" action="{{ url_for('main.delete_product', product_id=product.id) }}"
+                          onsubmit="return confirm('Delete this product?');">
+                        <button type="submit" class="btn-delete">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-products">
+                <i class="fas fa-box-open fa-2x mb-3" style="opacity:0.3"></i>
+                <h5 style="font-family:'Syne',sans-serif">No products yet</h5>
+                <p style="font-size:0.85rem">Click "+ Add New" to list your first product.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
