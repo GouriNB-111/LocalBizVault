@@ -7,7 +7,7 @@ services:
     name: localbizvault
     env: python
     pythonVersion: "3.11.0"
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && flask db upgrade
     startCommand: python force_fix.py && gunicorn "app:create_app()"
     envVars:
       - key: SECRET_KEY

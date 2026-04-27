@@ -17,6 +17,7 @@ def load_user(user_id):
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
     db.init_app(app)
     migrate = Migrate(app, db)
     login_manager.init_app(app)
@@ -24,7 +25,7 @@ def create_app():
     from app.routes import bp
     app.register_blueprint(bp)
 
-    with app.app_context():
-        db.create_all()
+    # REMOVED db.create_all() — use 'flask db upgrade' via migrations instead
+    # db.create_all() never updates existing columns, causing VARCHAR size issues
 
     return app
