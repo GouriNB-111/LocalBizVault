@@ -97,7 +97,11 @@
         <div class="shop-hero-inner">
             <div class="shop-avatar">
                 {% if shop.logo %}
-                <img src="/uploads/{{ shop.logo }}" alt="{{ shop.shop_name }}">
+                    {% if shop.logo.startswith('http') %}
+                        <img src="{{ shop.logo }}" alt="{{ shop.shop_name }}">
+                    {% else %}
+                        <img src="/uploads/{{ shop.logo }}" alt="{{ shop.shop_name }}">
+                    {% endif %}
                 {% else %}
                 {{ shop.shop_name[:2].upper() }}
                 {% endif %}
@@ -132,9 +136,15 @@
         <div class="product-card fade-up">
             <div class="product-img-wrap">
                 {% if product.image %}
-                <img src="{{ url_for('main.uploaded_file', filename=product.image) }}"
-                     alt="{{ product.name }}"
-                     onerror="this.parentElement.innerHTML='<div class=\'product-no-img\'><i class=\'fas fa-image fa-3x\' style=\'color:#d1d5db\'></i></div>'">
+                    {% if product.image.startswith('http') %}
+                        <img src="{{ product.image }}"
+                             alt="{{ product.name }}"
+                             onerror="this.parentElement.innerHTML='<div class=\'product-no-img\'><i class=\'fas fa-image fa-3x\' style=\'color:#d1d5db\'></i></div>'">
+                    {% else %}
+                        <img src="{{ url_for('main.uploaded_file', filename=product.image) }}"
+                             alt="{{ product.name }}"
+                             onerror="this.parentElement.innerHTML='<div class=\'product-no-img\'><i class=\'fas fa-image fa-3x\' style=\'color:#d1d5db\'></i></div>'">
+                    {% endif %}
                 {% else %}
                 <div class="product-no-img"><i class="fas fa-image fa-3x" style="color:#d1d5db"></i></div>
                 {% endif %}

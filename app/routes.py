@@ -4,9 +4,18 @@ from app import db
 from app.models import User, Product, Order
 from app.forms import RegistrationForm, LoginForm, ProductForm
 from werkzeug.utils import secure_filename
-import os                      # ← Must be here
+import os
 from slugify import slugify
 from datetime import datetime
+import cloudinary
+import cloudinary.uploader
+
+# ── Cloudinary config ──
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+)
 
 bp = Blueprint('main', __name__)
 
@@ -29,7 +38,6 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         slug = slugify(form.shop_name.data) if form.role.data == 'shopkeeper' else None
-
         user = User(
             username=form.username.data.lower(),
             name=form.name.data,
@@ -41,7 +49,6 @@ def register():
             status='Draft' if form.role.data == 'shopkeeper' else None
         )
         user.set_password(form.password.data)
-        
         db.session.add(user)
         db.session.commit()
         flash('Registration successful! Please login.', 'success')
@@ -75,13 +82,9 @@ def dashboard():
     if current_user.role != 'shopkeeper':
         flash('Access denied. Only shopkeepers can view dashboard.', 'danger')
         return redirect(url_for('main.home'))
-
     products = Product.query.filter_by(shop_id=current_user.id).all()
     orders = Order.query.filter_by(shop_id=current_user.id).order_by(Order.created_at.desc()).all()
-    
-    return render_template('admin/dashboard.html', 
-                           products=products, 
-                           orders=orders)
+    return render_template('admin/dashboard.html', products=products, orders=orders)
 
 # ------------------- ADD PRODUCT -------------------
 @bp.route('/add-product', methods=['GET', 'POST'])
@@ -93,11 +96,21 @@ def add_product():
 
     form = ProductForm()
     if form.validate_on_submit():
-        image = request.files.get('image')
         filename = None
+        image = request.files.get('image')
         if image and image.filename:
-            filename = secure_filename(image.filename)
-            image.save(os.path.join('uploads', filename))
+            try:
+                result = cloudinary.uploader.upload(
+                    image,
+                    folder='localbizvault',
+                    transformation=[
+                        {'width': 600, 'height': 600, 'crop': 'fill'}
+                    ]
+                )
+                filename = result['secure_url']  # permanent https:// URL
+            except Exception as e:
+                flash('Image upload failed, product saved without image.', 'warning')
+                filename = None
 
         product = Product(
             name=form.name.data,
@@ -131,7 +144,6 @@ def add_to_cart(product_id, slug):
     flash('Added to cart!', 'success')
     return redirect(url_for('main.storefront', slug=slug))
 
-
 @bp.route('/cart')
 @login_required
 def cart():
@@ -154,7 +166,6 @@ def cart():
             })
 
     return render_template('storefront/cart.html', cart_items=cart_items, total=total)
-
 
 @bp.route('/update-cart/<int:product_id>', methods=['POST'])
 @login_required
@@ -179,7 +190,6 @@ def update_cart(product_id):
 
     return redirect(url_for('main.cart'))
 
-
 @bp.route('/remove-from-cart/<int:product_id>', methods=['POST'])
 @login_required
 def remove_from_cart(product_id):
@@ -194,7 +204,6 @@ def remove_from_cart(product_id):
 
     return redirect(url_for('main.cart'))
 
-
 @bp.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
@@ -206,7 +215,6 @@ def checkout():
         flash('Your cart is empty.', 'warning')
         return redirect(url_for('main.home'))
 
-    # Group cart items by shop
     shop_items = {}
     for pid_str, quantity in cart.items():
         product = Product.query.get(int(pid_str))
@@ -222,16 +230,11 @@ def checkout():
 
     if request.method == 'POST':
         payment_method = request.form.get('payment_method', 'cod')
-        utr_number     = request.form.get('utr_number', '').strip()
+        utr_number = request.form.get('utr_number', '').strip()
 
         for shop_id, items in shop_items.items():
             total_amount = sum(i['subtotal'] for i in items)
-
-            # Set payment status based on method
-            if payment_method == 'upi':
-                pay_status = 'Pending UPI Verification'
-            else:
-                pay_status = 'Unpaid'
+            pay_status = 'Pending UPI Verification' if payment_method == 'upi' else 'Unpaid'
 
             order = Order(
                 customer_id=current_user.id,
@@ -257,11 +260,9 @@ def checkout():
 
         return redirect(url_for('main.home'))
 
-    # GET — show checkout page
     all_items = [item for items in shop_items.values() for item in items]
     grand_total = sum(i['subtotal'] for i in all_items)
 
-    # Get the shopkeeper's UPI details (first shop in cart)
     first_shop_id = list(shop_items.keys())[0]
     shop_owner = User.query.get(first_shop_id)
     upi_id = getattr(shop_owner, 'upi_id', None) or 'yourupi@bank'
@@ -302,20 +303,20 @@ def store_status():
         return redirect(url_for('main.home'))
     return render_template('admin/store_status.html', shop=current_user)
 
-# ------------------- DEPLOY STORE (PaaS Feature) -------------------
+# ------------------- DEPLOY STORE -------------------
 @bp.route('/deploy-store', methods=['POST'])
 @login_required
 def deploy_store():
     if current_user.role != 'shopkeeper':
         flash('Only shopkeepers can deploy stores.', 'warning')
         return redirect(url_for('main.home'))
-    
+
     if current_user.status == 'Draft':
         current_user.status = 'Deployed'
         current_user.deployed_at = datetime.utcnow()
         db.session.commit()
         flash('🎉 Your store has been successfully deployed on the platform!', 'success')
-    
+
     return redirect(url_for('main.dashboard'))
 
 @bp.route('/delete-product/<int:product_id>', methods=['POST'])
@@ -326,20 +327,22 @@ def delete_product(product_id):
         return redirect(url_for('main.home'))
 
     product = Product.query.get_or_404(product_id)
-    
+
     if product.shop_id == current_user.id:
-        # Delete image file if exists
         if product.image:
             try:
-                os.remove(os.path.join('uploads', product.image))
-            except:
+                # Delete from Cloudinary if it's a Cloudinary URL
+                if 'cloudinary' in str(product.image):
+                    public_id = 'localbizvault/' + product.image.split('/')[-1].split('.')[0]
+                    cloudinary.uploader.destroy(public_id)
+            except Exception:
                 pass
         db.session.delete(product)
         db.session.commit()
         flash('Product deleted successfully!', 'success')
     else:
         flash('You can only delete your own products.', 'danger')
-    
+
     return redirect(url_for('main.dashboard'))
 
 # ==================== SERVE UPLOADED IMAGES ====================
