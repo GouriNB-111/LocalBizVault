@@ -8,13 +8,15 @@ if database_url.startswith('postgres://'):
 if database_url and 'postgresql' in database_url:
     try:
         engine = sqlalchemy.create_engine(database_url)
-        with engine.connect() as conn:
+        with engine.begin() as conn:  # engine.begin() auto-commits on success
             conn.execute(sqlalchemy.text(
-                'ALTER TABLE "order" ALTER COLUMN payment_status TYPE VARCHAR(50)'
+                'ALTER TABLE "order" ALTER COLUMN payment_status TYPE VARCHAR(100)'
             ))
-            conn.commit()
-            print("✅ payment_status column fixed!")
+            conn.execute(sqlalchemy.text(
+                'ALTER TABLE "order" ALTER COLUMN payment_method TYPE VARCHAR(50)'
+            ))
+        print("✅ DB columns fixed successfully!")
     except Exception as e:
-        print(f"Note: {e}")
+        print(f"Note (may already be applied): {e}")
 else:
     print("Skipping — not PostgreSQL")

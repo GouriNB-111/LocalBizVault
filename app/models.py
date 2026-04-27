@@ -3,12 +3,13 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     name = db.Column(db.String(120))
-    role = db.Column(db.String(20), default="customer")   # customer or shopkeeper
+    role = db.Column(db.String(20), default="customer")
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
 
@@ -17,21 +18,18 @@ class User(UserMixin, db.Model):
     slug = db.Column(db.String(100), unique=True)
     status = db.Column(db.String(20), default="Draft")
     deployed_at = db.Column(db.DateTime)
-    upi_id       = db.Column(db.String(100), nullable=True)   # e.g. shop@upi
-    upi_qr_image = db.Column(db.String(200), nullable=True)   # uploaded QR filename
+    upi_id = db.Column(db.String(100), nullable=True)
+    upi_qr_image = db.Column(db.String(200), nullable=True)
 
     # Relationships
     products = db.relationship('Product', backref='shop', lazy=True, cascade="all, delete-orphan")
-    
-    # Fixed relationships with explicit foreign_keys
-    orders_as_shop = db.relationship('Order', 
-                                     foreign_keys='Order.shop_id', 
-                                     backref='shop', 
+    orders_as_shop = db.relationship('Order',
+                                     foreign_keys='Order.shop_id',
+                                     backref='shop',
                                      lazy=True)
-
-    orders_as_customer = db.relationship('Order', 
-                                         foreign_keys='Order.customer_id', 
-                                         backref='customer', 
+    orders_as_customer = db.relationship('Order',
+                                         foreign_keys='Order.customer_id',
+                                         backref='customer',
                                          lazy=True)
 
     def set_password(self, password):
@@ -58,9 +56,9 @@ class Order(db.Model):
     customer_name = db.Column(db.String(100))
     customer_phone = db.Column(db.String(20))
     total_amount = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(30), default="Pending")   # Pending, Out for Delivery, Delivered
-    payment_status = db.Column(db.String(50), default="Unpaid")
+    status = db.Column(db.String(30), default="Pending")
+    payment_status = db.Column(db.String(100), default="Unpaid")  # VARCHAR(100) — fits 'Pending UPI Verification'
+    payment_method = db.Column(db.String(50), default='cod')       # VARCHAR(50)
+    utr_number = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     shop_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    payment_method = db.Column(db.String(20), default='cod')   # 'cod' or 'upi'
-    utr_number     = db.Column(db.String(100), nullable=True)  # UPI transaction ID
