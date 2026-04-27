@@ -59,7 +59,7 @@ class Order(db.Model):
     customer_phone = db.Column(db.String(20))
     total_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(30), default="Pending")   # Pending, Out for Delivery, Delivered
-    payment_status = db.Column(db.String(20), default="Unpaid")
+    payment_status = db.Column(db.String(50), default="Unpaid")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     shop_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     payment_method = db.Column(db.String(20), default='cod')   # 'cod' or 'upi'

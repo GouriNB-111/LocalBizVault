@@ -8,7 +8,7 @@ services:
     env: python
     pythonVersion: "3.11.0"
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn "app:create_app()"
+    startCommand: python fix_db.py && gunicorn "app:create_app()"
     envVars:
       - key: SECRET_KEY
         generateValue: true
