@@ -21,7 +21,6 @@
 
     .dash-page { font-family: 'DM Sans', sans-serif; padding: 2rem 0 4rem; }
 
-    /* Welcome bar */
     .welcome-bar {
         background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         border-radius: 16px; padding: 1.6rem 2rem;
@@ -50,22 +49,15 @@
     .btn-wh.solid { background: white; color: var(--brand); border-color: white; }
     .btn-wh.solid:hover { background: #f0f0ff; color: var(--brand); }
 
-    /* Deploy banner */
     .deploy-banner {
         border-radius: 14px; padding: 1.2rem 1.5rem;
         display: flex; align-items: center; justify-content: space-between;
         flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;
         border: 1.5px solid;
     }
-    .deploy-banner.draft {
-        background: var(--warn-light); border-color: #fcd34d;
-    }
-    .deploy-banner.live {
-        background: var(--accent-light); border-color: #6ee7b7;
-    }
-    .banner-text strong {
-        font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
-    }
+    .deploy-banner.draft { background: var(--warn-light); border-color: #fcd34d; }
+    .deploy-banner.live  { background: var(--accent-light); border-color: #6ee7b7; }
+    .banner-text strong { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; }
     .banner-text p { font-size: 0.83rem; color: var(--ink-soft); margin: 0.15rem 0 0; }
     .btn-deploy {
         background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -85,7 +77,6 @@
     }
     .btn-live-visit:hover { background: #059669; color: white; }
 
-    /* Stat cards */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
     .stat-card {
         background: var(--surface); border: 1.5px solid var(--border);
@@ -106,22 +97,13 @@
     .stat-card .sc-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; color: var(--ink); line-height: 1; }
     .stat-card .sc-lbl { font-size: 0.78rem; color: var(--ink-soft); font-weight: 500; margin-top: 0.2rem; }
 
-    /* Section header */
     .section-header {
         display: flex; align-items: center; justify-content: space-between;
         margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.5rem;
     }
-    .section-title {
-        font-family: 'Syne', sans-serif; font-weight: 700;
-        font-size: 1.15rem; color: var(--ink); margin: 0;
-    }
-    .section-count {
-        background: var(--brand-light); color: var(--brand);
-        border-radius: 20px; padding: 0.15rem 0.65rem;
-        font-size: 0.78rem; font-weight: 700;
-    }
+    .section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--ink); margin: 0; }
+    .section-count { background: var(--brand-light); color: var(--brand); border-radius: 20px; padding: 0.15rem 0.65rem; font-size: 0.78rem; font-weight: 700; }
 
-    /* Product grid */
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.2rem; }
     .product-card {
         background: var(--surface); border: 1.5px solid var(--border);
@@ -135,14 +117,14 @@
         display: flex; align-items: center; justify-content: center;
         border-bottom: 1px solid var(--border); overflow: hidden;
     }
-    .product-img img { max-height: 100%; max-width: 100%; object-fit: contain; }
+    .product-img img { width: 100%; height: 100%; object-fit: cover; }
     .product-body { padding: 1rem; }
     .product-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--ink); margin-bottom: 0.3rem; }
     .product-price { font-size: 1.15rem; font-weight: 700; color: var(--accent); margin-bottom: 0.2rem; }
     .product-meta { font-size: 0.76rem; color: var(--ink-soft); margin-bottom: 0.7rem; }
     .product-meta span + span::before { content: ' · '; }
     .btn-delete {
-        width: 100%; background: var(--surface); color: var(--danger: #ef4444);
+        width: 100%; background: var(--surface);
         border: 1.5px solid #fecaca; border-radius: 8px;
         padding: 0.4rem; font-size: 0.8rem; font-weight: 600;
         cursor: pointer; transition: background 0.15s, border-color 0.15s;
@@ -150,7 +132,6 @@
     }
     .btn-delete:hover { background: #fef2f2; border-color: #fca5a5; }
 
-    /* Empty products */
     .empty-products {
         grid-column: 1/-1; text-align: center;
         padding: 3rem 2rem; background: var(--surface-2);
@@ -158,7 +139,6 @@
         color: var(--ink-soft);
     }
 
-    /* Fade animation */
     .fade-up { opacity:0; transform:translateY(14px); animation: fadeUp 0.4s ease forwards; }
     .fade-up:nth-child(1){animation-delay:0.05s} .fade-up:nth-child(2){animation-delay:0.1s}
     .fade-up:nth-child(3){animation-delay:0.15s} .fade-up:nth-child(4){animation-delay:0.2s}
@@ -250,10 +230,17 @@
             <div class="product-card">
                 <div class="product-img">
                     {% if product.image %}
-                    <img src="{{ url_for('main.uploaded_file', filename=product.image) }}"
-                         onerror="this.src='https://via.placeholder.com/300x200?text=No+Image';">
+                        {% if product.image.startswith('http') %}
+                            <img src="{{ product.image }}"
+                                 alt="{{ product.name }}"
+                                 onerror="this.parentElement.innerHTML='<i class=\'fas fa-image fa-3x\' style=\'color:#d1d5db\'></i>'">
+                        {% else %}
+                            <img src="{{ url_for('main.uploaded_file', filename=product.image) }}"
+                                 alt="{{ product.name }}"
+                                 onerror="this.parentElement.innerHTML='<i class=\'fas fa-image fa-3x\' style=\'color:#d1d5db\'></i>'">
+                        {% endif %}
                     {% else %}
-                    <i class="fas fa-image fa-3x" style="color:#d1d5db"></i>
+                        <i class="fas fa-image fa-3x" style="color:#d1d5db"></i>
                     {% endif %}
                 </div>
                 <div class="product-body">
