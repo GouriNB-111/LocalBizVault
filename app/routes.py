@@ -264,10 +264,10 @@ def checkout():
     grand_total = sum(i['subtotal'] for i in all_items)
 
     first_shop_id = list(shop_items.keys())[0]
-    shop_owner = User.query.get(first_shop_id)
-    upi_id = getattr(shop_owner, 'upi_id', None) or 'yourupi@bank'
-    upi_qr_image = getattr(shop_owner, 'upi_qr_image', None)
-
+    shop_owner = db.session.get(User, first_shop_id)
+    upi_id = (shop_owner.upi_id if shop_owner and shop_owner.upi_id else None) or 'yourupi@bank'
+    upi_qr_image = shop_owner.upi_qr_image if shop_owner else None
+    
     return render_template('storefront/checkout.html',
                            cart_items=all_items,
                            total=grand_total,
