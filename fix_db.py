@@ -1,5 +1,5 @@
 import os
-import sqlalchemy
+import psycopg2
 
 database_url = os.environ.get('DATABASE_URL', '')
 if database_url.startswith('postgres://'):
@@ -7,16 +7,22 @@ if database_url.startswith('postgres://'):
 
 if database_url and 'postgresql' in database_url:
     try:
-        engine = sqlalchemy.create_engine(database_url)
-        with engine.begin() as conn:  # engine.begin() auto-commits on success
-            conn.execute(sqlalchemy.text(
-                'ALTER TABLE "order" ALTER COLUMN payment_status TYPE VARCHAR(100)'
-            ))
-            conn.execute(sqlalchemy.text(
-                'ALTER TABLE "order" ALTER COLUMN payment_method TYPE VARCHAR(50)'
-            ))
-        print("✅ DB columns fixed successfully!")
+        # Use raw psycopg2 — bypasses SQLAlchemy transaction handling entirely
+        conn = psycopg2.connect(database_url)
+        conn.autocommit = True  # No transaction wrapper — DDL commits instantly
+        cur = conn.cursor()
+
+        cur.execute('ALTER TABLE "order" ALTER COLUMN payment_status TYPE VARCHAR(100)')
+        print("✅ payment_status → VARCHAR(100)")
+
+        cur.execute('ALTER TABLE "order" ALTER COLUMN payment_method TYPE VARCHAR(50)')
+        print("✅ payment_method → VARCHAR(50)")
+
+        cur.close()
+        conn.close()
+        print("✅ All column fixes applied!")
+
     except Exception as e:
-        print(f"Note (may already be applied): {e}")
+        print(f"fix_db note: {e}")
 else:
     print("Skipping — not PostgreSQL")
